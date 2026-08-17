@@ -1,3 +1,18 @@
+# 基于 Self-Forcing 的 Future Forcing pre-RoPE Query 统计规律简单复现
+
+本仓库在官方 Self-Forcing 基线上采集各 DiT block 的 pre-/post-RoPE Query
+dimension 0，并使用 normalized Wasserstein-1 统计不同 latent frame 之间的分布稳定性。
+
+> 当前复现只验证 Future Forcing 的 Query 统计观察，不包含未来 Query 预测、
+> KV 重要性评分、淘汰、合并或 dynamic RoPE correction。
+
+实验范围、运行命令、五组结果及局限请见
+[QUERY_STABILITY_REPRODUCTION.md](QUERY_STABILITY_REPRODUCTION.md)。
+
+---
+
+## Upstream: Self-Forcing
+
 <p align="center">
 <h1 align="center">Self Forcing</h1>
 <h3 align="center">Bridging the Train-Test Gap in Autoregressive Video Diffusion</h3>

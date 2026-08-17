@@ -225,14 +225,28 @@ class CausalInferencePipeline(torch.nn.Module):
 
             # Step 3.3: rerun with timestep zero to update KV cache using clean context
             context_timestep = torch.ones_like(timestep) * self.args.context_noise
-            self.generator(
-                noisy_image_or_video=denoised_pred,
-                conditional_dict=conditional_dict,
-                timestep=context_timestep,
-                kv_cache=self.kv_cache1,
-                crossattn_cache=self.crossattn_cache,
-                current_start=current_start_frame * self.frame_seq_length,
-            )
+            query_capture = getattr(self.generator.model, "query_capture", None)
+            if query_capture is not None:
+                query_capture.begin_chunk(
+                    start_frame=current_start_frame,
+                    num_frames=current_num_frames,
+                )
+            try:
+                self.generator(
+                    noisy_image_or_video=denoised_pred,
+                    conditional_dict=conditional_dict,
+                    timestep=context_timestep,
+                    kv_cache=self.kv_cache1,
+                    crossattn_cache=self.crossattn_cache,
+                    current_start=current_start_frame * self.frame_seq_length,
+                )
+            except Exception:
+                if query_capture is not None:
+                    query_capture.abort_chunk()
+                raise
+            else:
+                if query_capture is not None:
+                    query_capture.end_chunk()
 
             if profile:
                 block_end.record()

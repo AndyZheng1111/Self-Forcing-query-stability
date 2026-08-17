@@ -1,0 +1,14 @@
+[
+  {
+    "capture": "output/query_capture/prompt_2/prompt_000_seed_0_9068ef3c9c_dim_0.pt",
+    "prompt": "A skateboarder accelerating down a steep hill, gaining speed rapidly.",
+    "seed": 0,
+    "query_dimension": 0,
+    "num_layers": 30,
+    "num_frames": 21,
+    "tokens_per_frame": 1560,
+    "layers_pre_less_than_post": 30,
+    "mean_pre_normalized_w1": 0.5909512917200724,
+    "mean_post_normalized_w1": 3.5988298922777178
+  }
+]

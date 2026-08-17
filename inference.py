@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import torch
 import os
 from omegaconf import OmegaConf
@@ -18,6 +19,7 @@ from utils.dataset import TextDataset, TextImagePairDataset
 from utils.misc import set_seed
 
 from demo_utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller
+from utils.query_capture import QueryDimensionCapture
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config_path", type=str, help="Path to the config file")
@@ -33,7 +35,17 @@ parser.add_argument("--seed", type=int, default=0, help="Random seed")
 parser.add_argument("--num_samples", type=int, default=1, help="Number of samples to generate per prompt")
 parser.add_argument("--save_with_index", action="store_true",
                     help="Whether to save the video using the index or prompt as the filename")
+parser.add_argument("--query_capture_dir", type=str, default=None,
+                    help="Save clean-context pre/post-RoPE query samples to this directory")
+parser.add_argument("--query_dimension", type=int, default=0,
+                    help="Flattened query dimension to capture")
 args = parser.parse_args()
+
+if args.query_capture_dir is not None:
+    if args.i2v:
+        parser.error("Query capture currently supports T2V only")
+    if args.num_samples != 1:
+        parser.error("Query capture currently requires --num_samples 1")
 
 # Initialize distributed inference
 if "LOCAL_RANK" in os.environ:
@@ -69,6 +81,16 @@ else:
 if args.checkpoint_path:
     state_dict = torch.load(args.checkpoint_path, map_location="cpu")
     pipeline.generator.load_state_dict(state_dict['generator' if not args.use_ema else 'generator_ema'])
+
+query_capture = None
+if args.query_capture_dir is not None:
+    if dist.is_initialized():
+        raise RuntimeError("Query capture currently supports single-process inference only")
+    query_capture = QueryDimensionCapture(
+        query_dimension=args.query_dimension,
+        expected_layers=pipeline.num_transformer_blocks,
+    )
+    pipeline.generator.model.set_query_capture(query_capture)
 
 pipeline = pipeline.to(dtype=torch.bfloat16)
 if low_memory:
@@ -132,6 +154,8 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
 
     all_video = []
     num_generated_frames = 0  # Number of generated (latent) frames
+    if query_capture is not None:
+        query_capture.reset()
 
     if args.i2v:
         # For image-to-video, batch contains image and caption
@@ -173,6 +197,26 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
     current_video = rearrange(video, 'b t c h w -> b t h w c').cpu()
     all_video.append(current_video)
     num_generated_frames += latents.shape[1]
+
+    if query_capture is not None:
+        prompt_digest = hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:10]
+        capture_path = os.path.join(
+            args.query_capture_dir,
+            f"prompt_{idx:03d}_seed_{args.seed}_{prompt_digest}_dim_{args.query_dimension}.pt",
+        )
+        saved_path = query_capture.save(
+            capture_path,
+            metadata={
+                "prompt_index": idx,
+                "prompt": prompt,
+                "model_prompt": prompts[0],
+                "seed": args.seed,
+                "num_output_latent_frames": args.num_output_frames,
+                "num_frames_per_block": pipeline.num_frame_per_block,
+                "context_noise": pipeline.args.context_noise,
+            },
+        )
+        print(f"Saved query capture to {saved_path}")
 
     # Final output video
     video = 255.0 * torch.cat(all_video, dim=1)

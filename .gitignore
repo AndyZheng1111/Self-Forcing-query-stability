@@ -1,5 +1,40 @@
 __pycache__
 *.egg-info
 
+# Local credentials and machine-specific files.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa
+id_ed25519
+credentials.json
+*.log
+.idea/
+.vscode/
+wandb/
+
 wan_models
 checkpoints
+
+# Generated inference artifacts can be large and are reproducible.
+output/*
+
+# Keep only lightweight, derived query-stability results under output/.
+!output/query_analysis/
+!output/query_analysis/**/
+!output/query_analysis/**/*.csv
+!output/query_analysis/**/*.json
+!output/query_analysis/**/*.png
+
+# Local experiment captures and videos should not be committed.
+*.pt
+*.mp4
+*.pth
+*.ckpt
+*.safetensors
+*.npy
+*.npz
+*.pkl
+*.pickle

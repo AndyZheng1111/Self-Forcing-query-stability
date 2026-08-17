@@ -1,0 +1,14 @@
+[
+  {
+    "capture": "output/query_capture/prompt_dynamic_0/prompt_000_seed_0_d2169d6409_dim_0.pt",
+    "prompt": "A rooftop parkour race at sunset, jumping over vents and glass skylights while trains pass below, birds scatter, shadows stretch fast, and the camera swings from wide aerial views to close handheld pursuit.",
+    "seed": 0,
+    "query_dimension": 0,
+    "num_layers": 30,
+    "num_frames": 21,
+    "tokens_per_frame": 1560,
+    "layers_pre_less_than_post": 30,
+    "mean_pre_normalized_w1": 0.7668509403864543,
+    "mean_post_normalized_w1": 3.487510162591934
+  }
+]

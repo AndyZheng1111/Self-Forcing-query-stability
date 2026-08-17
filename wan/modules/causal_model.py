@@ -82,6 +82,8 @@ class CausalWanSelfAttention(nn.Module):
         self.o = nn.Linear(dim, dim)
         self.norm_q = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
         self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
+        self.layer_index = -1
+        self.query_capture = None
 
     def forward(
         self,
@@ -197,6 +199,15 @@ class CausalWanSelfAttention(nn.Module):
                 q, grid_sizes, freqs, start_frame=current_start_frame).type_as(v)
             roped_key = causal_rope_apply(
                 k, grid_sizes, freqs, start_frame=current_start_frame).type_as(v)
+
+            if self.query_capture is not None and self.query_capture.enabled:
+                self.query_capture.record(
+                    layer_index=self.layer_index,
+                    pre_rope_query=q,
+                    post_rope_query=roped_query,
+                    grid_sizes=grid_sizes,
+                    current_start=current_start,
+                )
 
             current_end = current_start + roped_query.shape[1]
             sink_tokens = self.sink_size * frame_seqlen
@@ -472,6 +483,9 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                                     local_attn_size, sink_size, qk_norm, cross_attn_norm, eps)
             for _ in range(num_layers)
         ])
+        self.query_capture = None
+        for layer_index, block in enumerate(self.blocks):
+            block.self_attn.layer_index = layer_index
 
         # head
         self.head = CausalHead(dim, out_dim, patch_size, eps)
@@ -498,6 +512,12 @@ class CausalWanModel(ModelMixin, ConfigMixin):
 
         self.num_frame_per_block = 1
         self.independent_first_frame = False
+
+    def set_query_capture(self, query_capture):
+        self.query_capture = query_capture
+        for layer_index, block in enumerate(self.blocks):
+            block.self_attn.layer_index = layer_index
+            block.self_attn.query_capture = query_capture
 
     def _set_gradient_checkpointing(self, module, value=False):
         self.gradient_checkpointing = value

@@ -1,0 +1,14 @@
+[
+  {
+    "capture": "output/query_capture/prompt_1/prompt_000_seed_0_71fb130a2e_dim_0.pt",
+    "prompt": "A push through an ocean research outpost.",
+    "seed": 0,
+    "query_dimension": 0,
+    "num_layers": 30,
+    "num_frames": 21,
+    "tokens_per_frame": 1560,
+    "layers_pre_less_than_post": 30,
+    "mean_pre_normalized_w1": 0.5614936356743176,
+    "mean_post_normalized_w1": 3.0832994798819224
+  }
+]

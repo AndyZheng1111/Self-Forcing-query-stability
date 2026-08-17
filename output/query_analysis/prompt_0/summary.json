@@ -1,0 +1,14 @@
+[
+  {
+    "capture": "output/query_capture/prompt_0/prompt_000_seed_0_efc6d1f947_dim_0.pt",
+    "prompt": "Tour of an art gallery with many beautiful works of art in different styles.",
+    "seed": 0,
+    "query_dimension": 0,
+    "num_layers": 30,
+    "num_frames": 21,
+    "tokens_per_frame": 1560,
+    "layers_pre_less_than_post": 30,
+    "mean_pre_normalized_w1": 0.7798107986648878,
+    "mean_post_normalized_w1": 3.4924426356951397
+  }
+]

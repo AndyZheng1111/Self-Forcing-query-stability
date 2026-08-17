@@ -24,6 +24,22 @@ Self Forcing trains autoregressive video diffusion models by **simulating the in
 
 ---
 
+## Future Forcing pre-RoPE Query stability: a minimal reproduction on Self-Forcing
+
+> 基于 Self-Forcing 的 Future Forcing pre-RoPE Query 统计规律简单复现
+
+This fork contains a small-scale reproduction of the pre-RoPE versus post-RoPE
+Query distribution observation reported by *Future Forcing*. It captures one
+flattened Query dimension during Self-Forcing's clean-context KV-cache update and
+compares latent-frame distributions with normalized Wasserstein-1 distance.
+
+See [QUERY_STABILITY_REPRODUCTION.md](QUERY_STABILITY_REPRODUCTION.md) for the
+scope, commands, results, and limitations. This is an observation-only
+reproduction; it does not implement Future Forcing's cache scoring, eviction,
+merging, or dynamic RoPE correction.
+
+---
+
 
 https://github.com/user-attachments/assets/7548c2db-fe03-4ba8-8dd3-52d2c6160739
 
